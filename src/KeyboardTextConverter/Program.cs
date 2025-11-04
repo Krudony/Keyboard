@@ -22,8 +22,14 @@ static class Program
             var config = ConfigManager.LoadConfig();
             Console.WriteLine($"Configuration loaded. Hotkey: {config.Hotkey}");
 
-            // Create components
-            var hotkeyManager = new HotkeyManager();
+            // Create WindowManager first - this is the main application window
+            // It manages the lifecycle for both HotkeyManager and future System Tray
+            var windowManager = new WindowManager();
+            Console.WriteLine("WindowManager created - main application window initialized");
+
+            // Create HotkeyManager with the WindowManager
+            // This ensures both components use the same window handle
+            var hotkeyManager = new HotkeyManager(windowManager);
             var notificationWindow = new NotificationWindow();
 
             // Setup hotkey event handler
@@ -37,11 +43,15 @@ static class Program
             Console.WriteLine("Hotkey listener started.");
 
             // Run message pump
+            // ApplicationContext will manage the message loop for the application
+            // The WindowManager's main window provides the proper window handle for hotkey registration
             Application.Run(new ApplicationContext());
 
             // Cleanup
             hotkeyManager.Dispose();
             notificationWindow.Dispose();
+            windowManager.Dispose();
+            Console.WriteLine("Application shutdown complete");
         }
         catch (Exception ex)
         {
